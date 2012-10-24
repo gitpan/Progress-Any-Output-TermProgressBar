@@ -6,9 +6,7 @@ use 5.010;
 use strict;
 use warnings;
 
-use Term::ProgressBar;
-
-our $VERSION = '0.01'; # VERSION
+our $VERSION = '0.02'; # VERSION
 
 # TODO: allow customizing Term::ProgressBar
 
@@ -17,18 +15,31 @@ sub new {
     bless \%args, $class;
 }
 
+sub _tpb {
+    require Term::ProgressBar;
+    state $tpb;
+    if (!$tpb) {
+        $tpb = Term::ProgressBar->new({
+            ETA    => 'linear',
+            count  => 100, # dummy
+            remove => 1,
+        });
+        $tpb->minor(0);
+    }
+    $tpb;
+}
+
+sub _message {
+    my $self = shift;
+    my $tpb = $self->_tpb;
+    $tpb->message(@_);
+}
+
 sub update {
     my ($self, %args) = @_;
 
-    state $tpb = Term::ProgressBar->new({
-        ETA=>'linear',
-        count=>100, # dummy
-    });
-
-    my $msg = $args{message};
-    return unless defined($msg);
-
     if (defined $args{target}) {
+        my $tpb = $self->_tpb;
         $tpb->target($args{target});
         $tpb->update($args{pos});
     }
@@ -47,7 +58,7 @@ Progress::Any::Output::TermProgressBar - Output progress to terminal using Term:
 
 =head1 VERSION
 
-version 0.01
+version 0.02
 
 =head1 SYNOPSIS
 
